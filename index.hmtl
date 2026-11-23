@@ -1,0 +1,140 @@
+[23.11.2026 5:23] ,: <!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMOBX CLICKER</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090909;color:white;font-family:Arial,sans-serif;text-align:center;padding-bottom:30px}
+header{padding:20px;background:#171717;border-bottom:1px solid #9b650e}
+.logo{font-size:29px;font-weight:900;color:#ffbd35;text-shadow:0 0 15px #ff9900}
+.subtitle{color:#aaa;font-size:12px}
+.balance{margin:15px auto;background:#1d1d1d;border:1px solid #a66c18;border-radius:16px;padding:15px;width:90%;max-width:450px}
+.balance strong{font-size:29px;color:#ffc247}
+.tabs{display:flex;justify-content:center;gap:5px;margin:12px 4px;flex-wrap:wrap}
+button{border:0;border-radius:10px;padding:11px;background:#292929;color:white;font-weight:bold;font-size:13px;cursor:pointer}
+button:disabled{opacity:.4}
+.tabs button.active,.mainbtn{background:linear-gradient(135deg,#ffbd35,#d66b00);color:#17100a}
+.page{display:none;padding:12px}
+.page.active{display:block}
+.mainbtn{width:185px;height:185px;border-radius:50%;font-size:60px;border:5px solid #ffe09a;box-shadow:0 0 35px #d98219;margin:20px auto;display:block}
+.mainbtn:active{transform:scale(.94)}
+.stat,.muted{color:#aaa;font-size:13px}
+.card{background:#1c1c1c;border:1px solid #62451d;border-radius:15px;padding:15px;margin:10px auto;max-width:520px}
+.card h3{color:#ffc247}
+.card button{background:#a96a13;margin-top:8px;width:100%}
+.progress{height:9px;background:#333;border-radius:10px;overflow:hidden;margin:12px}
+.progress div{height:100%;background:#ffb52e;width:0%}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;max-width:600px;margin:auto}
+.item{background:#1c1c1c;border:1px solid #62451d;border-radius:12px;padding:12px}
+.emoji{font-size:35px}
+.item strong{display:block;font-size:13px;margin:5px}
+.item button{width:100%;font-size:12px}
+.common{color:#aaa}.rare{color:#4daeff}.epic{color:#c17aff}.legendary{color:#ffc247}
+input,select{width:100%;padding:12px;background:#111;color:white;border:1px solid #62451d;border-radius:9px;margin:7px 0}
+#message,#caseResult,#upgradeResult,#promoResult{color:#ffc247;min-height:25px;margin:12px}
+.rouletteWindow{position:relative;overflow:hidden;height:130px;background:#101010;border:2px solid #b57b20;border-radius:12px;margin:15px 0}
+.rouletteTrack{display:flex;gap:7px;position:absolute;left:0;top:0;height:100%;align-items:center;will-change:transform}
+.rouletteItem{flex:0 0 105px;height:100px;background:#242424;border:1px solid #70501c;border-radius:10px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:5px;font-size:12px}
+.rouletteItem .emoji{font-size:34px}
+.pointer{position:absolute;z-index:2;top:0;bottom:0;left:50%;width:3px;background:#ffbd35;transform:translateX(-50%);box-shadow:0 0 10px #ffbd35}
+.pointer:before{content:"▼";position:absolute;top:0;left:50%;transform:translateX(-50%);color:#ffbd35;font-size:17px}
+.wheelWrap{width:260px;height:260px;position:relative;margin:20px auto}
+.wheel{width:100%;height:100%;border-radius:50%;border:5px solid #ffbd35;background:conic-gradient(#a85d11 0 45deg,#242424 45deg 90deg,#d18a22 90deg 135deg,#242424 135deg 180deg,#a85d11 180deg 225deg,#242424 225deg 270deg,#d18a22 270deg 315deg,#242424 315deg 360deg);transition:transform 4s cubic-bezier(.12,.7,.12,1);box-shadow:0 0 22px #a66c18}
+.wheelArrow{position:absolute;top:-13px;left:50%;transform:translateX(-50%);font-size:34px;color:#ffbd35;z-index:2}
+.wheelCenter{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:65px;height:65px;border-radius:50%;background:#171717;border:3px solid #ffbd35;display:flex;align-items:center;justify-content:center;font-weight:bold;color:#ffbd35}
+.small{font-size:12px;color:#aaa}
+#caseOpening{
+position:fixed!important;z-index:9999;left:50%;top:50%;
+transform:translate(-50%,-50%);width:min(94vw,520px);
+max-height:85vh;overflow-y:auto;margin:0;
+[23.11.2026 5:23] ,: box-shadow:0 0 0 100vmax rgba(0,0,0,.88),0 0 40px #ffae28;
+background:#171717;
+}
+#caseOpening h3{font-size:21px}
+#caseOpening .rouletteWindow{height:140px}
+#caseOpening .rouletteItem{height:110px}
+</style>
+</head>
+<body>
+
+<header>
+<div class="logo">👑 SMOBX</div>
+<div class="subtitle">CLICKER • CASES • SKINS • UPGRADER</div>
+</header>
+
+<div class="balance">
+<div>🪙 ТВОЇ МОНЕТИ</div>
+<strong id="coins">0</strong>
+<div class="stat">⭐ Рівень: <span id="level">1</span></div>
+<div class="progress"><div id="xpbar"></div></div>
+<div class="stat">XP: <span id="xp">0</span> / <span id="nextxp">100</span></div>
+</div>
+
+<div class="tabs">
+<button class="active" onclick="showPage('click',this)">⚡ Клікер</button>
+<button onclick="showPage('cases',this)">📦 Кейси</button>
+<button onclick="showPage('inventory',this)">🎒 Інвентар</button>
+<button onclick="showPage('upgrader',this)">🔧 Апгрейд</button>
+<button onclick="showPage('shop',this)">🚀 Магазин</button>
+<button onclick="showPage('profile',this)">👤 Профіль</button>
+</div>
+
+<section class="page active" id="click">
+<h2>SMOBX CLICKER</h2>
+<p class="stat">Натискай та заробляй монети!</p>
+<button class="mainbtn" onclick="clickCoin()">👆</button>
+<h3>+<span id="power">1</span> 🪙 за клік</h3>
+<div id="message">Починай свою пригоду!</div>
+</section>
+
+<section class="page" id="cases">
+<h2>📦 МАГАЗИН КЕЙСІВ</h2>
+<div id="caseGrid"></div>
+</section>
+
+<div class="card" id="caseOpening" style="display:none">
+<button onclick="closeCase()" style="width:100%;margin-bottom:10px">✖ ЗАКРИТИ</button>
+<h3 id="caseTitle"></h3>
+<p class="small">Дивись, який скін зупиниться під покажчиком!</p>
+<div class="rouletteWindow">
+<div class="pointer"></div>
+<div class="rouletteTrack" id="caseTrack"></div>
+</div>
+<div id="caseResult"></div>
+<button id="caseOpenAgain" onclick="spinCase()">ВІДКРИТИ ЩЕ РАЗ</button>
+</div>
+
+<section class="page" id="inventory">
+<h2>🎒 МІЙ ІНВЕНТАР</h2>
+<p>Предметів: <b id="inventoryCount">0</b></p>
+<p>Вартість колекції: <b id="inventoryValue">0</b> 🪙</p>
+<div class="grid" id="inventoryGrid"></div>
+</section>
+
+<section class="page" id="upgrader">
+<h2>🔧 АПГРЕЙДЕР</h2>
+<div class="card">
+<p class="muted">Обери свій скін і бажаний предмет.</p>
+<label>Твій предмет</label>
+<select id="upgradeFrom" onchange="updateUpgradeInfo()"></select>
+<label>Бажаний предмет</label>
+<select id="upgradeTo" onchange="updateUpgradeInfo()"></select>
+<h2 id="upgradeChance">—</h2>
+<p id="upgradeHint" class="small"></p>
+<p id="upgradeDifference" class="small"></p>
+<div class="wheelWrap">
+<div class="wheelArrow">▼</div>
+<div class="wheel" id="upgradeWheel"></div>
+<div class="wheelCenter">SMOBX</div>
+</div>
+<div id="upgradeResult"></div>
+<button id="upgradeButton" style="width:100%" onclick="performUpgrade()">КРУТИТИ АПГРЕЙД</button>
+<p class="small">При невдачі ціна твого предмета зменшиться на 50%.</p>
+</div>
+</section>
+
+<section class="page" id="shop">
+<h2>🚀 ПОКРАЩЕННЯ
